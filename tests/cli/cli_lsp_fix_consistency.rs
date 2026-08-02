@@ -263,6 +263,27 @@ fn test_md065_blanks_around_horizontal_rules_consistency() {
     }
 }
 
+#[test]
+fn test_md032_blanks_around_lists_consistency() {
+    let rule = MD032BlanksAroundLists::default();
+
+    let test_cases = vec![
+        ("Text\n* List item\nText", "List surrounded by paragraphs"),
+        (
+            "- item\n```rust\ntext\n```\n",
+            "List followed by an unindented code fence",
+        ),
+        (
+            "- item\n  ```rust\n  text\n  ```\n",
+            "List followed by a code fence indented into the item",
+        ),
+    ];
+
+    for (content, description) in test_cases {
+        test_cli_lsp_consistency(&rule, content, &format!("MD032: {description}"));
+    }
+}
+
 /// Create appropriate test content for each rule based on what it checks
 fn get_test_content_for_rule(rule_name: &str) -> Option<&'static str> {
     match rule_name {
@@ -293,7 +314,7 @@ fn get_test_content_for_rule(rule_name: &str) -> Option<&'static str> {
         "MD029" => Some("1. First\n3. Third"),
         "MD030" => Some("1.  Multiple spaces after marker"),
         "MD031" => Some("Text\n```\ncode\n```\nText"),
-        "MD032" => Some("Text\n* List item\nText"),
+        "MD032" => Some("- item\n```rust\ntext\n```\n"),
         "MD033" => Some("Text with <div>HTML</div>"),
         "MD034" => Some("Visit https://example.com"),
         "MD035" => Some("Text\n***\nText"),

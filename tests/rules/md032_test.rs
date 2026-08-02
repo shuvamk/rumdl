@@ -911,6 +911,44 @@ More text
 }
 
 #[test]
+fn test_fix_inserts_blank_line_before_unindented_code_fence_after_list() {
+    let rule = MD032BlanksAroundLists::default();
+    let content = "- item\n```rust\ntext\n```\n";
+    let ctx = LintContext::new(content, rumdl_lib::config::MarkdownFlavor::Standard, None);
+    let result = rule.check(&ctx).unwrap();
+    assert_eq!(result.len(), 1, "{result:?}");
+    assert_eq!(rule.fix(&ctx).unwrap(), "- item\n\n```rust\ntext\n```\n");
+}
+
+#[test]
+fn test_fix_matches_check_fixes_before_unindented_code_fence_after_list() {
+    let rule = MD032BlanksAroundLists::default();
+    let content = "- item\n```rust\ntext\n```\n";
+    let ctx = LintContext::new(content, rumdl_lib::config::MarkdownFlavor::Standard, None);
+    let warnings = rule.check(&ctx).unwrap();
+    let applied = rumdl_lib::utils::fix_utils::apply_warning_fixes(content, &warnings).unwrap();
+    assert_eq!(rule.fix(&ctx).unwrap(), applied);
+}
+
+#[test]
+fn test_indented_code_fence_inside_list_item_needs_no_blank_line() {
+    let rule = MD032BlanksAroundLists::default();
+    let content = "- item\n  ```rust\n  text\n  ```\n";
+    let ctx = LintContext::new(content, rumdl_lib::config::MarkdownFlavor::Standard, None);
+    assert!(rule.check(&ctx).unwrap().is_empty());
+    assert_eq!(rule.fix(&ctx).unwrap(), content);
+}
+
+#[test]
+fn test_indented_code_after_html_comment_following_list_needs_no_blank_line() {
+    let rule = MD032BlanksAroundLists::default();
+    let content = "- item\n<!-- c -->\n    code\n";
+    let ctx = LintContext::new(content, rumdl_lib::config::MarkdownFlavor::Standard, None);
+    assert!(rule.check(&ctx).unwrap().is_empty());
+    assert_eq!(rule.fix(&ctx).unwrap(), content);
+}
+
+#[test]
 fn test_math_block_inside_blockquote_not_flagged() {
     // Lines starting with - or + inside a blockquote math block must not be treated as lists.
     let rule = MD032BlanksAroundLists::default();

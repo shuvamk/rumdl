@@ -962,21 +962,11 @@ impl MD032BlanksAroundLists {
                 // If blank separation exists (through HTML comments), no fix needed
                 if !has_blank_separation && content_line > 0 {
                     let next_line_str = lines[content_line - 1];
-                    // Check if next line is excluded - in code block, front matter, or starts an indented code block
-                    let is_next_excluded = ctx
-                        .line_info(content_line)
-                        .is_some_and(|info| info.in_code_block || info.in_front_matter)
+                    // Check if next line is excluded - front matter or indented code blocks within lists
+                    let is_next_excluded = ctx.line_info(content_line).is_some_and(|info| info.in_front_matter)
                         || (content_line <= ctx.lines.len()
                             && ctx.lines[content_line - 1].in_code_block
-                            && ctx.lines[content_line - 1].indent >= 2
-                            && (ctx.lines[content_line - 1]
-                                .content(ctx.content)
-                                .trim()
-                                .starts_with("```")
-                                || ctx.lines[content_line - 1]
-                                    .content(ctx.content)
-                                    .trim()
-                                    .starts_with("~~~")));
+                            && ctx.lines[content_line - 1].indent >= 2);
                     let next_prefix = BLOCKQUOTE_PREFIX_RE.find(next_line_str).map_or("", |m| m.as_str());
 
                     // Check blockquote levels to detect boundary transitions
